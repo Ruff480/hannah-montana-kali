@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Toggle Hannah Montana
+Comment=Switch between the normal Kali look and the Hannah Montana theme
+Exec=/usr/local/bin/hannah-montana-kali toggle
+Icon=/usr/share/hannah-montana-kali/H.png
+Terminal=false
+Categories=Settings;DesktopSettings;
+Keywords=hannah;montana;theme;pink;
+X-KDE-Shortcuts=Meta+Shift+H

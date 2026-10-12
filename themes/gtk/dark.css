@@ -1,0 +1,15 @@
+/* Hannah Montana (dark): deep purple headers with hot-pink accents.
+   Palette from Hannah Montana Linux's PrettyPinkDark colour scheme. */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained-dark.css");
+
+@define-color hm_bg            #202326;
+@define-color hm_base          #141618;
+@define-color hm_fg            #fcfcfc;
+@define-color hm_header        #4f2354;
+@define-color hm_header_dim    #401448;
+@define-color hm_header_fg     #fcfcfc;
+@define-color hm_accent        #e055d6;
+@define-color hm_accent_fg     #ffffff;
+@define-color hm_panel         #4f2354;
+@define-color hm_panel_fg      #fcfcfc;
+@define-color hm_border        #5e3366;

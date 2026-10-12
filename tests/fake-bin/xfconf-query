@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Tiny stand-in for xfconf-query, backed by flat files, for the test suite.
+ch="" prop="" set="" have_set=0 new=0 reset=0 list=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c) ch="$2"; shift 2 ;;
+        -p) prop="$2"; shift 2 ;;
+        -s) set="$2"; have_set=1; shift 2 ;;
+        -t) shift 2 ;;
+        -n) new=1; shift ;;
+        -r) reset=1; shift ;;
+        -l) list=1; shift ;;
+        -v) shift ;;
+        *) echo "fake xfconf-query: unsupported $1" >&2; exit 2 ;;
+    esac
+done
+db="$FAKE_XFCONF/$ch"
+mkdir -p "$FAKE_XFCONF"; touch "$db"
+get() { awk -F'\t' -v p="$prop" '$1 == p { print $2; f = 1 } END { exit !f }' "$db"; }
+if [ "$list" = 1 ]; then cut -f1 "$db" | sort; exit 0; fi
+if [ "$reset" = 1 ]; then grep -v -P "^\Q$prop\E\t" "$db" > "$db.t"; mv "$db.t" "$db"; exit 0; fi
+if [ "$have_set" = 1 ]; then
+    if ! get >/dev/null && [ "$new" = 0 ]; then
+        echo "Property \"$prop\" does not exist on channel \"$ch\"." >&2; exit 1
+    fi
+    grep -v -P "^\Q$prop\E\t" "$db" > "$db.t"; mv "$db.t" "$db"
+    printf '%s\t%s\n' "$prop" "$set" >> "$db"; exit 0
+fi
+get || { echo "Property \"$prop\" does not exist on channel \"$ch\"." >&2; exit 1; }

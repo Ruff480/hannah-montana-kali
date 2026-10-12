@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Hannah Montana hotkey
+Comment=Makes sure the Hannah Montana toggle hotkey is bound for this user
+Exec=/usr/local/bin/hannah-montana-kali login
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-Phase=Applications
+X-KDE-autostart-phase=2

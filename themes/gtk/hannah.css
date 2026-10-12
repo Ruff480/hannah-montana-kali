@@ -1,0 +1,85 @@
+
+/* ---- Shared rules (appended after light.css or dark.css at install) ---- */
+
+/* Named colours many GTK3 apps and XFCE components look up. */
+@define-color theme_bg_color @hm_bg;
+@define-color theme_fg_color @hm_fg;
+@define-color theme_base_color @hm_base;
+@define-color theme_text_color @hm_fg;
+@define-color theme_selected_bg_color @hm_accent;
+@define-color theme_selected_fg_color @hm_accent_fg;
+@define-color selected_bg_color @hm_accent;
+@define-color selected_fg_color @hm_accent_fg;
+@define-color accent_bg_color @hm_accent;
+@define-color accent_color @hm_accent;
+
+window.background, .background { background-color: @hm_bg; color: @hm_fg; }
+
+/* Title bars / header bars */
+headerbar, .titlebar, .titlebar:not(headerbar) {
+    background-image: none;
+    background-color: @hm_header;
+    color: @hm_header_fg;
+    border-color: @hm_border;
+}
+headerbar:backdrop, .titlebar:backdrop { background-color: @hm_header_dim; }
+headerbar .title { color: @hm_header_fg; font-weight: bold; }
+
+/* Selection everywhere */
+*:selected, selection, row:selected, treeview.view:selected,
+iconview:selected, .view:selected, entry selection, textview text selection {
+    background-color: @hm_accent;
+    color: @hm_accent_fg;
+}
+
+/* Buttons and inputs */
+button:hover { box-shadow: inset 0 0 0 1px @hm_accent; }
+button.suggested-action, button:checked, button.default {
+    background-image: none;
+    background-color: @hm_accent;
+    color: @hm_accent_fg;
+    border-color: shade(@hm_accent, 0.85);
+}
+entry:focus, spinbutton:focus, textview:focus {
+    border-color: @hm_accent;
+    box-shadow: inset 0 0 0 1px @hm_accent;
+}
+checkbutton check:checked, checkbutton radio:checked,
+check:checked, radio:checked,
+switch:checked {
+    background-image: none;
+    background-color: @hm_accent;
+    border-color: shade(@hm_accent, 0.85);
+    color: @hm_accent_fg;
+}
+scale highlight, progressbar progress, levelbar block.filled {
+    background-image: none;
+    background-color: @hm_accent;
+    border-color: @hm_accent;
+}
+scrollbar slider:hover, scrollbar slider:active { background-color: @hm_accent; }
+notebook > header tab:checked { box-shadow: inset 0 -3px @hm_accent; }
+link, *:link { color: @hm_accent; }
+
+/* Menus and tooltips */
+menu menuitem:hover, .menu menuitem:hover, popover modelbutton:hover {
+    background-color: @hm_accent;
+    color: @hm_accent_fg;
+}
+tooltip.background { background-color: rgba(79, 35, 84, 0.95); color: #ffffff; }
+
+/* XFCE panel, Whisker menu and Thunar side pane */
+.xfce4-panel.background, .xfce4-panel {
+    background-image: none;
+    background-color: @hm_panel;
+    color: @hm_panel_fg;
+}
+.xfce4-panel button { color: @hm_panel_fg; }
+.xfce4-panel button:hover { background-color: alpha(@hm_header, 0.35); }
+.xfce4-panel button:checked { background-color: @hm_accent; color: @hm_accent_fg; }
+#whiskermenu-window, #whiskermenu-window .background { background-color: @hm_bg; }
+.thunar .sidebar, .sidebar { background-color: shade(@hm_bg, 0.97); }
+
+/* Desktop icon labels on the wallpaper */
+XfdesktopIconView.view { background-color: transparent; color: #ffffff; text-shadow: 1px 1px 2px #4f2354; }
+XfdesktopIconView.view:selected { background-color: alpha(@hm_accent, 0.75); }

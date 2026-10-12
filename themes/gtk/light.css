@@ -1,0 +1,15 @@
+/* Hannah Montana (light): pink headers on a soft lilac base.
+   Palette from Hannah Montana Linux's PrettyPink colour scheme. */
+@import url("resource:///org/gtk/libgtk/theme/Adwaita/gtk-contained.css");
+
+@define-color hm_bg            #fbf1fb;
+@define-color hm_base          #ffffff;
+@define-color hm_fg            #232629;
+@define-color hm_header        #ff96ff;
+@define-color hm_header_dim    #ffc8ff;
+@define-color hm_header_fg     #232629;
+@define-color hm_accent        #c42fbf;
+@define-color hm_accent_fg     #ffffff;
+@define-color hm_panel         #9b3fd6;
+@define-color hm_panel_fg      #ffffff;
+@define-color hm_border        #e7b9e7;

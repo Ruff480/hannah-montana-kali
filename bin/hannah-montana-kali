@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+# hannah-montana-kali: switch Kali between its normal look and Hannah Montana.
+# https://github.com/ruff480/hannah-montana-kali
+set -uo pipefail
+
+HM_LIB="${HM_LIB:-$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/../lib" && pwd)}"
+# shellcheck source=../lib/common.sh
+. "$HM_LIB/common.sh"
+# shellcheck source=../lib/xfce.sh
+. "$HM_LIB/xfce.sh"
+# shellcheck source=../lib/kde.sh
+. "$HM_LIB/kde.sh"
+# shellcheck source=../lib/gnome.sh
+. "$HM_LIB/gnome.sh"
+# shellcheck source=../lib/system.sh
+. "$HM_LIB/system.sh"
+
+usage() {
+    cat <<EOF
+Usage: $HM_NAME <command>
+
+Desktop theme (per user, no root needed):
+  toggle                 Switch the theme on/off (this is what the hotkey runs)
+  on | off               Force the theme on or off
+  status                 Show theme state, desktop and hotkey
+  variant light|dark     Pick the pink (light) or purple (dark) flavour
+  hotkey on [--key K]    Bind the toggle hotkey (default: $HM_HOTKEY)
+  hotkey off             Remove the hotkey
+
+Login screen, GRUB and boot splash (root):
+  system on|off|status   e.g. sudo $HM_NAME system on
+
+Detected desktop: $(hm_detect_desktop)
+EOF
+}
+
+hm_require_desktop() {
+    HM_DESKTOP="$(hm_detect_desktop)"
+    [ "$HM_DESKTOP" != unknown ] ||
+        die "could not tell which desktop is running (XFCE, KDE Plasma or GNOME are supported)"
+}
+
+save_config() {
+    mkdir -p "$(dirname "$HM_CONFIG_FILE")"
+    printf 'HM_VARIANT=%q\nHM_HOTKEY=%q\n' "$HM_VARIANT" "$HM_HOTKEY" > "$HM_CONFIG_FILE"
+}
+
+theme_on() {
+    hm_require_desktop
+    local state; state="$(hm_state_get)"
+    if [ "${state%% *}" = on ]; then log "already on"; return 0; fi
+    [ -r "$HM_WALLPAPER" ] || die "theme assets missing from $HM_PREFIX; run install.sh first"
+    "${HM_DESKTOP}_on"
+    hm_state_set "on $HM_DESKTOP $HM_VARIANT"
+    log "Hannah Montana mode: ON ($HM_DESKTOP, $HM_VARIANT)"
+    notify "Best of both worlds! Theme on."
+}
+
+theme_off() {
+    local state desk
+    state="$(hm_state_get)"
+    if [ "${state%% *}" != on ]; then log "already off"; return 0; fi
+    desk="$(printf '%s' "$state" | awk '{ print $2 }')"
+    hm_require_desktop
+    if [ -n "$desk" ] && [ "$desk" != "$HM_DESKTOP" ]; then
+        die "the theme was turned on under $desk; log into $desk to turn it off"
+    fi
+    "${HM_DESKTOP}_off"
+    hm_state_set off
+    log "Hannah Montana mode: OFF"
+    notify "Back to plain Kali."
+}
+
+theme_toggle() {
+    mkdir -p "$HM_STATE_DIR"
+    # Holding the hotkey can fire it repeatedly; let only one run at a time.
+    exec 9>"$HM_STATE_DIR/lock"
+    if have flock && ! flock -n 9; then exit 0; fi
+    if [ "$(hm_state_get | awk '{ print $1 }')" = on ]; then theme_off; else theme_on; fi
+}
+
+hotkey_cmd() {
+    local action="${1:-on}"; shift || true
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --key) HM_HOTKEY="${2:?--key needs a value like Super+Shift+H}"; shift 2 ;;
+            *) die "unknown option: $1" ;;
+        esac
+    done
+    hm_require_desktop
+    case "$action" in
+        on)
+            if "${HM_DESKTOP}_hotkey_on"; then
+                rm -f "$HM_STATE_DIR/hotkey-disabled"
+                save_config
+                log "Hotkey $HM_HOTKEY toggles the theme"
+            fi ;;
+        off)
+            "${HM_DESKTOP}_hotkey_off"
+            mkdir -p "$HM_STATE_DIR" && : > "$HM_STATE_DIR/hotkey-disabled"
+            log "Hotkey removed" ;;
+        *) die "usage: $HM_NAME hotkey on|off [--key KEY]" ;;
+    esac
+}
+
+# Run from /etc/xdg/autostart at every login: make sure the hotkey exists for
+# this user (so new users get it too) unless they switched it off.
+login_cmd() {
+    [ -e "$HM_STATE_DIR/hotkey-disabled" ] && return 0
+    HM_DESKTOP="$(hm_detect_desktop)"
+    [ "$HM_DESKTOP" = unknown ] && return 0
+    [ -n "$("${HM_DESKTOP}_hotkey_status" 2>/dev/null)" ] && return 0
+    "${HM_DESKTOP}_hotkey_on" 2>/dev/null || true
+}
+
+status_cmd() {
+    local desk key
+    desk="$(hm_detect_desktop)"
+    printf 'theme:   %s\n' "$(hm_state_get)"
+    printf 'variant: %s\n' "$HM_VARIANT"
+    printf 'desktop: %s\n' "$desk"
+    if [ "$desk" != unknown ]; then key="$("${desk}_hotkey_status" 2>/dev/null)"; fi
+    printf 'hotkey:  %s\n' "${key:-not bound}"
+    system_status
+}
+
+main() {
+    hm_variant_names
+    case "${1:-}" in
+        toggle)  theme_toggle ;;
+        on)      theme_on ;;
+        off)     theme_off ;;
+        status)  status_cmd ;;
+        variant)
+            case "${2:-}" in light|dark) ;; *) die "usage: $HM_NAME variant light|dark" ;; esac
+            local was; was="$(hm_state_get | awk '{ print $1 }')"
+            [ "$was" = on ] && theme_off
+            HM_VARIANT="$2"; save_config; hm_variant_names
+            [ "$was" = on ] && theme_on
+            log "variant set to $HM_VARIANT" ;;
+        hotkey)  shift; hotkey_cmd "$@" ;;
+        login)   login_cmd ;;
+        system)
+            case "${2:-status}" in
+                on) system_on ;; off) system_off ;; status) system_status ;;
+                *) die "usage: $HM_NAME system on|off|status" ;;
+            esac ;;
+        -h|--help|help|"") usage ;;
+        *) usage; exit 2 ;;
+    esac
+}
+
+main "$@"
