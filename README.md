@@ -22,8 +22,10 @@ Run it as your normal user, not with `sudo`. It asks for your password when it c
 system-wide files. By default it then:
 
 1. installs the themes,
-2. binds **Super+Shift+H** to the toggle,
-3. turns the theme on.
+2. binds **Super+Shift+H** to the toggle.
+
+It does **not** switch the theme on. Your desktop looks the same until you press **Super+Shift+H**
+or run `hannah-montana-kali on`.
 
 **Works offline.** All the artwork is in this repository (`assets/hml/`, about 60 MB), so the
 installer never touches the network. To install on a machine with no internet, copy the cloned
@@ -34,7 +36,7 @@ folder over (or download the repo as a ZIP from GitHub) and run `./install.sh` t
 | `--variant dark` | Purple/dark flavour instead of pink/light |
 | `--hotkey Ctrl+Alt+H` | Use a different key combination |
 | `--system` | Also theme the login screen, the GRUB menu and the boot splash |
-| `--no-enable` | Install and bind the key, but leave the theme off for now |
+| `--enable` | Also switch the theme on as soon as the install finishes |
 | `--no-hotkey` | Don't bind any key |
 
 ## Use

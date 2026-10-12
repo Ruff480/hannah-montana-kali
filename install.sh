@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Install the Hannah Montana theme for Kali Linux and bind the toggle hotkey.
 #
-#   ./install.sh                  # install, bind Super+Shift+H, turn the theme on
+#   ./install.sh                  # install and bind Super+Shift+H (theme stays off)
 #   ./install.sh --system         # ...and theme the login screen, GRUB and boot splash
-#   ./install.sh --variant dark --hotkey Ctrl+Alt+H --no-enable
+#   ./install.sh --variant dark --hotkey Ctrl+Alt+H --enable
 #
 # Run it as your normal user; it asks for sudo for the system-wide files.
 # Works offline: all artwork ships in this repository under assets/hml.
@@ -22,7 +22,7 @@ BIN_LINK=/usr/local/bin/hannah-montana-kali
 variant=light
 hotkey="Super+Shift+H"
 want_system=0
-want_enable=1
+want_enable=0
 want_hotkey=1
 
 usage() { sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; cat <<EOF
@@ -31,7 +31,7 @@ Options:
   --variant light|dark   Pink (default) or purple flavour
   --hotkey KEY           Toggle hotkey, e.g. Super+Shift+H (default), Ctrl+Alt+H
   --system               Also theme LightDM/SDDM, GRUB and Plymouth
-  --no-enable            Install and bind the hotkey but leave the theme off
+  --enable               Also turn the theme on right after installing
   --no-hotkey            Do not bind a hotkey
 EOF
 }
@@ -41,7 +41,8 @@ while [ $# -gt 0 ]; do
         --variant)   variant="${2:?}"; shift 2 ;;
         --hotkey)    hotkey="${2:?}"; shift 2 ;;
         --system)    want_system=1; shift ;;
-        --no-enable) want_enable=0; shift ;;
+        --enable)    want_enable=1; shift ;;
+        --no-enable) want_enable=0; shift ;;   # old flag; now the default
         --no-hotkey) want_hotkey=0; shift ;;
         -h|--help)   usage; exit 0 ;;
         *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
@@ -195,5 +196,9 @@ if [ "$want_system" -eq 1 ]; then
     $SUDO env HM_VARIANT="$variant" "$BIN_LINK" system on
 fi
 
-say "Done! Press $hotkey to switch between Kali and Hannah Montana."
+if [ "$want_hotkey" -eq 1 ]; then
+    say "Done! The theme is installed but not active. Press $hotkey to switch it on (and again to switch it off)."
+else
+    say "Done! The theme is installed but not active. Run 'hannah-montana-kali on' to switch it on."
+fi
 say "More: hannah-montana-kali --help"
