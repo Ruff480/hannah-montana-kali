@@ -21,10 +21,13 @@ cd hannah-montana-kali
 Run it as your normal user, not with `sudo`. It asks for your password when it copies the
 system-wide files. By default it then:
 
-1. downloads the Hannah Montana Linux artwork (about 60 MB),
-2. installs the themes,
-3. binds **Super+Shift+H** to the toggle,
-4. turns the theme on.
+1. installs the themes,
+2. binds **Super+Shift+H** to the toggle,
+3. turns the theme on.
+
+**Works offline.** All the artwork is in this repository (`assets/hml/`, about 60 MB), so the
+installer never touches the network. To install on a machine with no internet, copy the cloned
+folder over (or download the repo as a ZIP from GitHub) and run `./install.sh` there.
 
 | Option | What it does |
 | --- | --- |
@@ -33,7 +36,6 @@ system-wide files. By default it then:
 | `--system` | Also theme the login screen, the GRUB menu and the boot splash |
 | `--no-enable` | Install and bind the key, but leave the theme off for now |
 | `--no-hotkey` | Don't bind any key |
-| `--assets PATH` | Use a local Hannah Montana Linux checkout or tarball (for offline installs) |
 
 ## Use
 
@@ -107,8 +109,8 @@ All the artwork comes from
 wallpaper, lock screen, login and GRUB backgrounds, icon themes, *PrettyPink* colour schemes, Plasma
 style, global theme, SDDM theme and Plymouth theme. That project is a modern remaster of the
 [original 2009 Hannah Montana Linux](https://hannahmontana.sourceforge.net/), and its wallpaper is
-rebuilt from the original. The installer downloads these assets from a pinned commit at install
-time, so they aren't copied into this repository.
+rebuilt from the original. The files are bundled unmodified in [`assets/hml/`](assets/hml/SOURCE.md),
+with the upstream commit they came from and their licence.
 
 Much of the HML Plasma work is in turn based on KDE's Breeze. This repository adds the toggle
 script, the GTK theme and the QTerminal colour scheme, and is licensed under the

@@ -6,15 +6,15 @@
 #   ./install.sh --variant dark --hotkey Ctrl+Alt+H --no-enable
 #
 # Run it as your normal user; it asks for sudo for the system-wide files.
+# Works offline: all artwork ships in this repository under assets/hml.
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
 
-# The artwork comes from Hannah Montana Linux v26 (a GPLv3+ remaster of the
-# original 2009 Hannah Montana Linux), pinned to a known commit.
-HML_REPO="https://gitlab.com/DecaCagle/hannahmontanalinux26"
-HML_COMMIT="4b3e191027dedea08473d4322dea20faef0855ea"
-HML_TARBALL="$HML_REPO/-/archive/$HML_COMMIT/hannahmontanalinux26-$HML_COMMIT.tar.gz?path=config/includes.chroot/usr/share"
+# The artwork in assets/hml is from Hannah Montana Linux v26 (a GPLv3+ remaster
+# of the original 2009 Hannah Montana Linux); see assets/hml/SOURCE.md.
+share="$REPO_DIR/assets/hml/usr/share"
+theme_dir="$share/desktop-base/hannah-montana-theme"
 
 PREFIX=/usr/share/hannah-montana-kali
 BIN_LINK=/usr/local/bin/hannah-montana-kali
@@ -24,7 +24,6 @@ hotkey="Super+Shift+H"
 want_system=0
 want_enable=1
 want_hotkey=1
-assets=""
 
 usage() { sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; cat <<EOF
 
@@ -34,8 +33,6 @@ Options:
   --system               Also theme LightDM/SDDM, GRUB and Plymouth
   --no-enable            Install and bind the hotkey but leave the theme off
   --no-hotkey            Do not bind a hotkey
-  --assets PATH          Use a local Hannah Montana Linux checkout or tarball
-                         instead of downloading ($HML_REPO)
 EOF
 }
 
@@ -46,7 +43,6 @@ while [ $# -gt 0 ]; do
         --system)    want_system=1; shift ;;
         --no-enable) want_enable=0; shift ;;
         --no-hotkey) want_hotkey=0; shift ;;
-        --assets)    assets="${2:?}"; shift 2 ;;
         -h|--help)   usage; exit 0 ;;
         *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
     esac
@@ -65,29 +61,10 @@ fi
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 
-# --- 1. Get the Hannah Montana Linux assets -------------------------------
-fetch_assets() {
-    local tarball="$work/hml.tar.gz"
-    if [ -n "$assets" ]; then
-        if [ -d "$assets" ]; then echo "$assets"; return; fi
-        tarball="$assets"
-    else
-        command -v curl >/dev/null || die "curl is required (sudo apt install curl)"
-        say "Downloading Hannah Montana Linux artwork (~60 MB) from GitLab..." >&2
-        curl -fL --retry 3 --progress-bar -o "$tarball" "$HML_TARBALL" ||
-            die "download failed; fetch $HML_REPO yourself and pass --assets"
-    fi
-    mkdir -p "$work/src"
-    tar -xzf "$tarball" -C "$work/src"
-    echo "$work/src"
-}
-
-src_root="$(fetch_assets)"
-theme_dir="$(find "$src_root" -type d -path '*/desktop-base/hannah-montana-theme' -print -quit)"
-[ -n "$theme_dir" ] || die "could not find Hannah Montana Linux assets in $src_root"
-share="$(dirname "$(dirname "$theme_dir")")"   # .../usr/share
-for need in icons/HannahMontana color-schemes/PrettyPink.colors plasma/look-and-feel/org.hml.desktop; do
-    [ -e "$share/$need" ] || die "assets incomplete: missing $need"
+# --- 1. Check the bundled Hannah Montana Linux assets ---------------------
+for need in desktop-base/hannah-montana-theme/wallpaper icons/HannahMontana \
+            color-schemes/PrettyPink.colors plasma/look-and-feel/org.hml.desktop; do
+    [ -e "$share/$need" ] || die "bundled artwork incomplete: missing assets/hml/usr/share/$need (is this a full git clone?)"
 done
 
 # --- 2. Stage everything into a tree that mirrors / -----------------------
@@ -160,7 +137,7 @@ sed "s/^X-KDE-Shortcuts=.*/X-KDE-Shortcuts=$(HM_HOTKEY="$hotkey" HM_CONFIG_FILE=
 cp "$stage/usr/share/applications/hannah-montana-kali-toggle.desktop" "$stage/usr/share/kglobalaccel/"
 cp "$REPO_DIR/share/hannah-montana-kali-autostart.desktop" "$stage/etc/xdg/autostart/hannah-montana-kali.desktop"
 
-printf 'HML_REPO=%s\nHML_COMMIT=%s\n' "$HML_REPO" "$HML_COMMIT" > "$stage$PREFIX/VERSION"
+cp "$REPO_DIR/assets/hml/SOURCE.md" "$stage$PREFIX/SOURCE.md"
 cp "$REPO_DIR/uninstall.sh" "$stage$PREFIX/uninstall.sh"
 chmod 755 "$stage$PREFIX/uninstall.sh"
 
